@@ -52,7 +52,7 @@ $codes = db()->query('SELECT * FROM codes ORDER BY created_at DESC, code LIMIT 1
 ?>
 <main class="container mt-4">
 <div class="d-flex justify-content-between align-items-center mb-3">
-<h1 class="h4 mb-0">Administration</h1><a href="?logout=1" class="btn btn-sm btn-outline-secondary">Déconnexion</a></div>
+<h1 class="h4 mb-0">Administration</h1><div><a href="admin_offres.php" class="btn btn-sm btn-primary me-1">Offres</a><a href="?logout=1" class="btn btn-sm btn-outline-secondary">Déconnexion</a></div></div>
 <?php if ($info): ?><div class="alert alert-success py-2"><?= e($info) ?></div><?php endif; ?>
 
 <div class="row g-2 mb-3 text-center">

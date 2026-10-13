@@ -1,0 +1,6 @@
+config.php
+storage/tmp/*
+!storage/tmp/.htaccess
+diagnostic.php
+generate_hash.php
+.DS_Store
