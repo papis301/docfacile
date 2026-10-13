@@ -1,0 +1,6 @@
+.hero{background:linear-gradient(135deg,#1F4E79,#2E7D32);color:#fff;padding:2.5rem 0}
+.cv-thumb{height:170px;border-radius:.5rem .5rem 0 0;position:relative;background:#f5f5f5;padding:14px}
+.cv-thumb .bar{height:10px;border-radius:3px;margin-bottom:8px}
+.cv-thumb .l{height:6px;background:#ddd;border-radius:3px;margin-bottom:6px}
+.badge-prem{position:absolute;top:8px;right:8px}
+.card{transition:transform .15s}.card:hover{transform:translateY(-3px)}

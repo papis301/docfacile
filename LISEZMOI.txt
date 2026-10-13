@@ -1,0 +1,33 @@
+INSTALLATION
+1. Importer schema.sql dans MySQL (phpMyAdmin).
+2. Modifier config.php (accès base de données, numéro WhatsApp, prix).
+3. Envoyer tout le dossier sur l'hébergement PHP 8+ (le dossier storage est protégé).
+4. Ajouter des codes premium : INSERT INTO codes (code) VALUES ('CV-XXXXXX');
+   Vendez chaque code via Wave / Orange Money. Un code = un téléchargement.
+5. Pour regénérer les modèles Word : node generate_templates.js (paquet npm "docx").
+
+ADMINISTRATION
+- Adresse : votre-site.com/admin.php
+- Changez ADMIN_PASSWORD dans config.php AVANT la mise en ligne.
+- Si la base existe déjà, exécutez : ALTER TABLE codes ADD created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
+- Conseil : mettez le site en HTTPS (Let's Encrypt, gratuit sur la plupart des hébergeurs).
+
+CONVERTISSEUR PDF -> WORD (convert.php)
+- Prérequis serveur : Python 3 + `pip install -r converter/requirements.txt`, et PHP proc_open autorisé.
+  Un hébergement mutualisé ne le permet souvent pas : prenez un VPS (5-6 $/mois) sous Ubuntu.
+- Si la base existe déjà, créez la table : voir `conversions` à la fin de schema.sql.
+- Le dossier storage/tmp doit être accessible en écriture par PHP (chmod 775).
+- Réglages : PYTHON_BIN, MAX_MB, DAILY_LIMIT dans config.php.
+
+SEO (pages /cv/...)
+- Modifiez SITE_URL dans config.php ET l'adresse du sitemap dans robots.txt.
+- Les pages sont définies dans pages.php : ajoutez-en en copiant une entrée (texte unique obligatoire).
+- Après la mise en ligne, déclarez https://votre-domaine/sitemap.xml dans Google Search Console.
+
+ALWAYSDATA
+- Le plan gratuit est réservé à un usage non lucratif et limité à l'adresse xxx.alwaysdata.net : pour un site commercial avec votre domaine, prenez un plan payant.
+- Activez l'accès SSH dans l'administration, puis : pip install --user -r converter/requirements.txt
+- Si PYTHON_BIN n'est pas trouvé par PHP, mettez le chemin complet (ex. /home/VOTRE_COMPTE/.local/bin/python3 ou celui d'un virtualenv).
+
+MODE GRATUIT
+- config.php : FREE_MODE = true rend les 15 modèles gratuits. Passez à false pour réactiver les 10 modèles premium (vente par codes).

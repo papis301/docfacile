@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /admin.php
+Sitemap: https://www.votre-domaine.com/sitemap.xml
