@@ -2,13 +2,13 @@
 const DB_HOST = 'localhost';
 const DB_NAME = 'cvmodeles';
 const DB_USER = 'root';
-const DB_PASS = '';
+const DB_PASS = 'root';
 const SITE_NAME = 'CVModèles';
 const SITE_URL = 'https://www.votre-domaine.com'; // sans slash final
 const PRICE = '500 FCFA';
 const FREE_MODE = true; // true = les 15 modèles sont gratuits ; false = les modèles premium demandent un code
 const WHATSAPP = '221770000000'; // votre numéro, format international sans +
-const ADMIN_PASSWORD = 'changez-moi'; // CHANGEZ ce mot de passe avant la mise en ligne
+const ADMIN_PASSWORD_HASH = '$2y$10$p30H7wO1y9Cx16IKU7iLL.osM2lMW9oW6IqOA8D0B3ggvsAphnb8q';
 const CONVERTER_ENABLED = false; // true = affiche et active le convertisseur PDF → Word
 const PYTHON_BIN = 'python3';   // chemin de Python (avec pdf2docx installé)
 const MAX_MB = 5;               // taille maximale du PDF

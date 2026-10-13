@@ -10,7 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, $_POST['csrf'] ?? '')) { http_response_code(400); exit('Requête invalide'); }
     if (isset($_POST['password'])) {
         usleep(500000); // freine les essais répétés
-        if (hash_equals(ADMIN_PASSWORD, $_POST['password'])) { session_regenerate_id(true); $_SESSION['admin'] = 1; }
+        if (ADMIN_PASSWORD_HASH === '') $err = 'Aucun mot de passe configuré : voir ADMIN_PASSWORD_HASH dans config.php.';
+        elseif (password_verify((string)$_POST['password'], ADMIN_PASSWORD_HASH)) { session_regenerate_id(true); $_SESSION['admin'] = 1; }
         else $err = 'Mot de passe incorrect.';
     } elseif (!empty($_SESSION['admin'])) {
         if (isset($_POST['generate'])) {
@@ -27,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (isset($_POST['delete'])) {
             db()->prepare('DELETE FROM codes WHERE code=? AND used=0')->execute([$_POST['delete']]);
             $info = 'Code supprimé.';
+        } elseif (isset($_POST['done'])) {
+            db()->prepare('UPDATE demandes SET statut=1 WHERE id=?')->execute([(int)$_POST['done']]);
+            $info = 'Demande marquée comme traitée.';
         }
     }
 }
@@ -84,5 +88,12 @@ $codes = db()->query('SELECT * FROM codes ORDER BY created_at DESC, code LIMIT 1
 <?php foreach ($top as $t): ?><div class="d-flex justify-content-between small border-bottom py-1">
 <span><?= e($t['name']) ?></span><strong><?= (int)$t['downloads'] ?></strong></div><?php endforeach; ?>
 </div></div></div></div>
+<div class="card mt-3"><div class="card-body"><h2 class="h6">Demandes de services</h2>
+<?php foreach (db()->query('SELECT * FROM demandes ORDER BY statut, created_at DESC LIMIT 30')->fetchAll() as $d): ?>
+<div class="border-bottom py-2 small"><div class="d-flex justify-content-between">
+<strong><?= e($d['nom']) ?> · <?= e($d['service']) ?></strong>
+<?php if (!$d['statut']): ?><form method="post"><input type="hidden" name="csrf" value="<?= $csrf ?>"><button name="done" value="<?= (int)$d['id'] ?>" class="btn btn-sm btn-outline-success">Traité</button></form><?php else: ?><span class="badge bg-secondary">Traité</span><?php endif; ?></div>
+<div><?= e($d['contact']) ?> · <span class="text-muted"><?= e($d['created_at']) ?></span></div><div><?= nl2br(e($d['message'])) ?></div></div>
+<?php endforeach; ?></div></div>
 </main>
 <?php foot();

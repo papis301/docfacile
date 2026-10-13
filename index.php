@@ -4,10 +4,10 @@ if (FREE_MODE) foreach ($list as &$t0) $t0['is_premium'] = 0; unset($t0);
 head('Modèles de CV Word gratuits'); ?>
 <section class="hero text-center"><div class="container">
 <h1 class="h2 fw-bold">Créez votre CV en 5 minutes</h1>
-<p class="mb-0"><?= FREE_MODE ? '15 modèles Word gratuits, prêts à remplir.' : '15 modèles Word prêts à remplir. 5 gratuits, 10 premium à '.PRICE.'.' ?></p></div></section>
-<main class="container mt-4"><div class="row g-3">
+<p class="mb-0"><?= FREE_MODE ? '15 modèles Word gratuits, prêts à remplir.' : '15 modèles Word prêts à remplir. 5 gratuits, 10 premium à '.PRICE.'.' ?></p><a href="contact.php" class="btn btn-light btn-sm mt-3">💬 Demander un service</a></div></section>
+<main class="container mt-4"><div class="row g-4"><div class="col-lg-9"><div class="row g-3">
 <?php foreach ($list as $t): ?>
-<div class="col-6 col-md-4 col-lg-3"><div class="card h-100 shadow-sm">
+<div class="col-6 col-md-4"><div class="card h-100 shadow-sm">
  <div class="cv-thumb">
   <div class="bar w-75" style="background:#<?= e($t['color']) ?>"></div>
   <div class="l w-50"></div><div class="bar w-100" style="background:#<?= e($t['color']) ?>;opacity:.5;height:6px"></div>
@@ -18,10 +18,18 @@ head('Modèles de CV Word gratuits'); ?>
  <div class="card-body p-2 d-flex flex-column">
   <h2 class="h6 mb-1"><?= e($t['name']) ?></h2>
   <p class="small text-muted mb-2"><?= e($t['description']) ?></p>
-  <a href="download.php?id=<?= (int)$t['id'] ?>" class="btn btn-sm btn-primary mt-auto">Télécharger .docx</a>
+  <a onclick="typeof gtag==='function'&&gtag('event','download_modele',{modele:<?= e(json_encode($t['name'])) ?>})" href="download.php?id=<?= (int)$t['id'] ?>" class="btn btn-sm btn-primary mt-auto">Télécharger .docx</a>
  </div></div></div>
 <?php endforeach; ?>
-</div></main>
+</div></div>
+<aside class="col-lg-3"><div class="card shadow-sm aside-sticky"><div class="card-body">
+<h2 class="h6 fw-bold mb-3">Nos services</h2>
+<?php foreach ((require 'services.php') as $s => $sv): ?>
+<a href="contact.php?service=<?= e($s) ?>" class="d-flex text-decoration-none text-body mb-3">
+<span class="fs-4 me-2"><?= $sv[2] ?></span><span><strong class="small d-block"><?= e($sv[0]) ?></strong><span class="small text-muted"><?= e($sv[1]) ?></span></span></a>
+<?php endforeach; ?>
+<a href="contact.php" class="btn btn-success w-100">💬 Contact</a>
+</div></div></aside></div></main>
 <section class="container mt-5"><h2 class="h6">Modèles de CV par pays et par profil</h2><p class="small">
 <?php foreach ((require 'pages.php') as $s => $pg): ?><a class="me-2 d-inline-block" href="cv/<?= e($s) ?>"><?= e($pg[0]) ?></a><?php endforeach; ?></p></section>
 <?php foot();
