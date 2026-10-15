@@ -62,6 +62,27 @@ $codes = db()->query('SELECT * FROM codes ORDER BY created_at DESC, code LIMIT 1
 <div class="col-6 col-md-3"><div class="card p-2"><div class="h4 mb-0"><?= (int)$dl ?></div><small>Téléchargements</small></div></div>
 </div>
 
+<?php // Statistiques des CV internationaux (modèles 16 à 19)
+$intlFiles = ['modele-16.docx', 'modele-17.docx', 'modele-18.docx', 'modele-19.docx'];
+$intlRows = []; $intlErr = false;
+try {
+    $qi = db()->prepare('SELECT t.name, t.downloads,
+        (SELECT COUNT(*) FROM telechargements l WHERE l.template_id=t.id AND l.created_at > NOW() - INTERVAL 7 DAY) AS d7,
+        (SELECT COUNT(*) FROM telechargements l WHERE l.template_id=t.id AND l.created_at > NOW() - INTERVAL 30 DAY) AS d30
+        FROM templates t WHERE t.file IN ('.implode(',', array_fill(0, count($intlFiles), '?')).') ORDER BY t.downloads DESC');
+    $qi->execute($intlFiles); $intlRows = $qi->fetchAll();
+} catch (Throwable $e) { $intlErr = true; }
+$sum = fn($k) => array_sum(array_column($intlRows, $k));
+?>
+<div class="card mb-3"><div class="card-body"><h2 class="h6">CV internationaux téléchargés</h2>
+<?php if ($intlErr): ?><div class="alert alert-warning py-2 mb-0 small">Table <code>telechargements</code> manquante : exécutez la requête indiquée dans schema.sql.</div>
+<?php else: ?><div class="table-responsive"><table class="table table-sm align-middle mb-1">
+<thead><tr><th>Modèle</th><th class="text-end">7 jours</th><th class="text-end">30 jours</th><th class="text-end">Total</th></tr></thead><tbody>
+<?php foreach ($intlRows as $r): ?><tr><td><?= e($r['name']) ?></td><td class="text-end"><?= (int)$r['d7'] ?></td><td class="text-end"><?= (int)$r['d30'] ?></td><td class="text-end"><?= (int)$r['downloads'] ?></td></tr><?php endforeach; ?>
+<tr class="fw-bold"><td>Total</td><td class="text-end"><?= $sum('d7') ?></td><td class="text-end"><?= $sum('d30') ?></td><td class="text-end"><?= $sum('downloads') ?></td></tr></tbody></table></div>
+<div class="small text-muted"><?= $dl > 0 ? round($sum('downloads') * 100 / $dl).' % de tous les téléchargements. ' : '' ?>Les colonnes 7 et 30 jours comptent à partir de l'activation du suivi ; le total inclut l'historique.</div>
+<?php endif; ?></div></div>
+
 <div class="card mb-3"><div class="card-body">
 <h2 class="h6">Générer des codes</h2>
 <form method="post" class="row g-2"><input type="hidden" name="csrf" value="<?= $csrf ?>">

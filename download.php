@@ -9,6 +9,7 @@ $error = '';
 
 function send($t, $path) {
     db()->prepare('UPDATE templates SET downloads=downloads+1 WHERE id=?')->execute([$t['id']]);
+    try { db()->prepare('INSERT INTO telechargements (template_id) VALUES (?)')->execute([$t['id']]); } catch (Throwable $e) {} // journal pour les statistiques
     header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     header('Content-Disposition: attachment; filename="CV-'.preg_replace('/\W+/','-',$t['name']).'.docx"');
     header('Content-Length: '.filesize($path));
