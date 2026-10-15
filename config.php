@@ -26,9 +26,10 @@ function head($title, $extra = "") { ?><!doctype html>
 <title><?= e($title) ?> | <?= SITE_NAME ?></title>
 <?php if (!$extra): ?><meta name="description" content="Modèles de CV Word gratuits pour étudiants et professionnels d'Afrique de l'Ouest. Téléchargez, modifiez, postulez."><?php endif; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link href="assets/style.css" rel="stylesheet"><?= $extra ?></head><body>
 <nav class="navbar navbar-dark bg-dark"><div class="container">
-<a class="navbar-brand fw-bold" href="index.php">📄 <?= SITE_NAME ?></a>
+<a class="navbar-brand" href="index.php"><img src="assets/logo-blanc.svg" alt="<?= SITE_NAME ?>" height="34"></a>
 <?php if (CONVERTER_ENABLED): ?><a class="btn btn-sm btn-outline-light" href="convert.php">PDF → Word</a><?php endif; ?></div></nav>
 <?php }
 function foot() { ?>
