@@ -93,20 +93,13 @@ function cv_build_docx(array $data): string {
     $zip->addFromString('word/styles.xml', $styles);
     $zip->addFromString('word/_rels/document.xml.rels', $docRels);
     if (!$zip->close()) {
-    @unlink($tmp);
-    throw new RuntimeException(
-        'Impossible de finaliser le fichier Word.'
-    );
-}
-
-if (!is_file($tmp) || filesize($tmp) === 0) {
-    @unlink($tmp);
-    throw new RuntimeException(
-        'Le fichier Word est vide ou absent.'
-    );
-}
-
-return $tmp;
+        @unlink($tmp);
+        throw new RuntimeException('Impossible de finaliser le fichier Word.');
+    }
+    if (!is_file($tmp) || filesize($tmp) <= 0) {
+        @unlink($tmp);
+        throw new RuntimeException('Le fichier Word est vide ou absent.');
+    }
     return $tmp;
 }
 
@@ -130,21 +123,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_cv'])) {
     } else {
         $tmp = null;
         try {
+            error_log('DOCSFACILE: début du traitement POST');
+
             $tmp = cv_build_docx($data);
-            $filename = 'CV-'.preg_replace('/[^A-Za-z0-9_-]+/', '-', trim($data['prenom'].'-'.$data['nom']));
+            if (!is_file($tmp) || filesize($tmp) <= 0) {
+                throw new RuntimeException('Le fichier DOCX est absent ou vide.');
+            }
+            error_log('DOCSFACILE: DOCX créé, taille=' . filesize($tmp));
+
+            if (headers_sent($sourceFile, $sourceLine)) {
+                throw new RuntimeException('En-têtes déjà envoyés dans ' . $sourceFile . ':' . $sourceLine);
+            }
+            if (ob_get_level() > 0 && ob_get_length() > 0) {
+                ob_clean();
+            }
+
+            $filename = 'CV-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', trim($data['prenom'] . '-' . $data['nom']));
             $filename = trim($filename, '-') ?: 'CV';
+            $filename = substr($filename, 0, 90) . '.docx';
+
             header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-            header('Content-Disposition: attachment; filename="'.substr($filename,0,90).'.docx"');
-            header('Content-Length: '.filesize($tmp));
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . filesize($tmp));
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
             header('Pragma: no-cache');
             header('X-Content-Type-Options: nosniff');
-            readfile($tmp);
+
+            $sent = readfile($tmp);
+            if ($sent === false) {
+                error_log('DOCSFACILE: échec de readfile()');
+            } else {
+                error_log('DOCSFACILE: envoi terminé, octets=' . $sent);
+            }
             @unlink($tmp);
             exit;
         } catch (Throwable $e) {
             if ($tmp && is_file($tmp)) @unlink($tmp);
-            error_log('DocsFacile DOCX generation error: '.$e->getMessage());
+            error_log('DOCSFACILE ERREUR: ' . get_class($e) . ' - ' . $e->getMessage() . ' - ' . $e->getFile() . ':' . $e->getLine());
             $error = $e instanceof RuntimeException && strpos($e->getMessage(), 'ZipArchive') !== false
                 ? $e->getMessage()
                 : 'La génération du document a échoué. Réessayez plus tard.';
@@ -178,7 +193,7 @@ body{background:#f4f7fb;color:var(--cv-ink)}.builder-hero{background:linear-grad
         <?php for ($i=0;$i<3;$i++): ?><div class="section-box"><div class="fw-bold mb-3">Formation <?= $i+1 ?></div><div class="row g-3"><div class="col-sm-6"><label class="form-label">Diplôme / formation</label><input class="form-control live" name="formation_diplome[]" maxlength="250" value="<?= e($_POST['formation_diplome'][$i] ?? '') ?>" placeholder="Licence en informatique"></div><div class="col-sm-6"><label class="form-label">Établissement</label><input class="form-control live" name="formation_etablissement[]" maxlength="250" value="<?= e($_POST['formation_etablissement'][$i] ?? '') ?>" placeholder="Université / école"></div><div class="col-sm-6"><label class="form-label">Année / période</label><input class="form-control live" name="formation_annee[]" maxlength="100" value="<?= e($_POST['formation_annee'][$i] ?? '') ?>" placeholder="2020 – 2023"></div></div></div><?php endfor; ?>
       </section>
       <section class="step-panel" data-panel="3"><div class="mini-label mb-2">Étape 4 sur 4</div><h2 class="h4 step-title mb-1">Compétences et autres informations</h2><p class="text-secondary small mb-4">Terminez votre CV avec les informations utiles au poste recherché.</p><div class="mb-3"><label class="form-label" for="competences">Compétences</label><textarea class="form-control live" id="competences" name="competences" rows="4" maxlength="1800" placeholder="Gestion de projet&#10;Microsoft Office&#10;Développement Android"><?= e($_POST['competences'] ?? '') ?></textarea><div class="form-text">Vous pouvez mettre une compétence par ligne.</div></div><div class="mb-3"><label class="form-label" for="langues">Langues</label><textarea class="form-control live" id="langues" name="langues" rows="2" maxlength="1000" placeholder="Français : courant&#10;Anglais : intermédiaire"><?= e($_POST['langues'] ?? '') ?></textarea></div><div class="mb-3"><label class="form-label" for="interets">Centres d’intérêt</label><textarea class="form-control live" id="interets" name="interets" rows="2" maxlength="1000" placeholder="Lecture, bénévolat, sport..."><?= e($_POST['interets'] ?? '') ?></textarea></div><div class="alert alert-light border small mb-0"><strong>Prêt à générer ?</strong> Le fichier Word est modifiable. Vérifiez vos informations dans l'aperçu puis cliquez sur « Générer mon CV Word ».</div></section>
-      <div class="nav-actions"><button type="button" class="btn btn-outline-secondary" id="prevBtn" disabled>← Précédent</button><button type="button" class="btn btn-primary" id="nextBtn">Étape suivante →</button><button type="submit" name="generate_cv" value="1" class="btn btn-success d-none" id="generateBtn">Générer mon CV Word ↓</button></div>
+      <div class="nav-actions"><button type="button" class="btn btn-outline-danger" id="clearBtn">Effacer les informations</button><button type="button" class="btn btn-outline-secondary" id="prevBtn" disabled>← Précédent</button><button type="button" class="btn btn-primary" id="nextBtn">Étape suivante →</button><input type="hidden" name="generate_cv" value="1"><button type="submit" class="btn btn-success d-none" id="generateBtn">Générer mon CV Word ↓</button></div>
       <p class="required-note mt-3 mb-0">* Champs obligatoires. Aucune création de compte n’est nécessaire.</p>
     </form></div>
     <aside class="col-lg-4 preview-col"><div class="cv-preview"><div class="d-flex justify-content-between align-items-center mb-2"><strong>Aperçu de votre CV</strong><span class="badge text-bg-light">A4</span></div><div class="preview-paper"><div class="preview-name" id="p-name">Votre nom</div><div class="preview-copy" id="p-contact">Téléphone · E-mail · Ville</div><div class="preview-rule"></div><div id="p-profil-wrap"><div class="preview-section">PROFIL PROFESSIONNEL</div><div class="preview-copy" id="p-profil">Votre résumé professionnel apparaîtra ici.</div></div><div class="preview-section">EXPÉRIENCES</div><div class="preview-copy" id="p-exp">Vos expériences apparaîtront ici.</div><div class="preview-section">FORMATION</div><div class="preview-copy" id="p-formation">Vos formations apparaîtront ici.</div><div id="p-competences-wrap"><div class="preview-section">COMPÉTENCES</div><div class="preview-copy" id="p-competences">Vos compétences apparaîtront ici.</div></div><div id="p-langues-wrap"><div class="preview-section">LANGUES</div><div class="preview-copy" id="p-langues">Vos langues apparaîtront ici.</div></div></div><p class="small text-secondary mt-2 mb-0">Aperçu indicatif. La mise en page finale peut varier légèrement selon votre logiciel Word.</p></div></aside>
@@ -187,7 +202,7 @@ body{background:#f4f7fb;color:var(--cv-ink)}.builder-hero{background:linear-grad
 <script>
 (function(){
  const panels=[...document.querySelectorAll('[data-panel]')], tabs=[...document.querySelectorAll('[data-step]')];let current=0;
- const prev=document.getElementById('prevBtn'),next=document.getElementById('nextBtn'),generate=document.getElementById('generateBtn');
+ const prev=document.getElementById('prevBtn'),next=document.getElementById('nextBtn'),generate=document.getElementById('generateBtn'),clearBtn=document.getElementById('clearBtn');
  function showStep(n){current=Math.max(0,Math.min(panels.length-1,n));panels.forEach((p,i)=>p.classList.toggle('active',i===current));tabs.forEach((t,i)=>{t.classList.toggle('active',i===current);t.classList.toggle('done',i<current)});prev.disabled=current===0;next.classList.toggle('d-none',current===panels.length-1);generate.classList.toggle('d-none',current!==panels.length-1);if(current===0){document.getElementById('prenom').focus({preventScroll:true})} }
  next.addEventListener('click',()=>{if(current===0){const form=document.getElementById('cvForm');for(const id of ['prenom','nom']){const el=document.getElementById(id);if(!el.reportValidity())return}}showStep(current+1)});prev.addEventListener('click',()=>showStep(current-1));tabs.forEach(t=>t.addEventListener('click',()=>{if(Number(t.dataset.step)<=current)showStep(Number(t.dataset.step));else if(current===0){if(document.getElementById('prenom').reportValidity()&&document.getElementById('nom').reportValidity())showStep(Number(t.dataset.step))}}));
  const val=(selector)=>{const el=document.querySelector(selector);return el?el.value.trim():''};const put=(id,text,placeholder)=>{document.getElementById(id).textContent=text||placeholder};
@@ -195,7 +210,13 @@ body{background:#f4f7fb;color:var(--cv-ink)}.builder-hero{background:linear-grad
  const exp=[];for(let i=0;i<3;i++){const a=document.querySelectorAll('[name="exp_poste[]"]')[i]?.value.trim(),b=document.querySelectorAll('[name="exp_entreprise[]"]')[i]?.value.trim(),c=document.querySelectorAll('[name="exp_dates[]"]')[i]?.value.trim(),d=document.querySelectorAll('[name="exp_details[]"]')[i]?.value.trim();if(a||b||c||d)exp.push([a,b,c].filter(Boolean).join(' — ')+(d?'\n'+d:''))}put('p-exp',exp.join('\n\n'),'Vos expériences apparaîtront ici.');
  const edu=[];for(let i=0;i<3;i++){const a=document.querySelectorAll('[name="formation_diplome[]"]')[i]?.value.trim(),b=document.querySelectorAll('[name="formation_etablissement[]"]')[i]?.value.trim(),c=document.querySelectorAll('[name="formation_annee[]"]')[i]?.value.trim();if(a||b||c)edu.push([a,b,c].filter(Boolean).join(' — '))}put('p-formation',edu.join('\n'),'Vos formations apparaîtront ici.');put('p-competences',val('#competences'),'Vos compétences apparaîtront ici.');put('p-langues',val('#langues'),'Vos langues apparaîtront ici.');document.getElementById('p-competences-wrap').style.display=val('#competences')?'':'none';document.getElementById('p-langues-wrap').style.display=val('#langues')?'':'none';}
  document.querySelectorAll('.live').forEach(el=>el.addEventListener('input',update));update();
- document.getElementById('cvForm').addEventListener('submit',function(e){if(!document.getElementById('prenom').reportValidity()||!document.getElementById('nom').reportValidity()){e.preventDefault();showStep(0);return}generate.disabled=true;generate.textContent='Génération en cours…';});
+ clearBtn.addEventListener('click',function(){
+   if(!window.confirm('Voulez-vous vraiment effacer toutes les informations saisies dans ce CV ? Cette action est irréversible.')) return;
+   document.querySelectorAll('#cvForm input:not([type=hidden]), #cvForm textarea, #cvForm select').forEach(function(field){field.value='';});
+   generate.disabled=false;generate.textContent='Générer mon CV Word ↓';
+   update();showStep(0);
+ });
+ document.getElementById('cvForm').addEventListener('submit',function(e){if(!document.getElementById('prenom').reportValidity()||!document.getElementById('nom').reportValidity()){e.preventDefault();showStep(0);return}generate.disabled=true;generate.textContent='Génération en cours…';window.setTimeout(function(){generate.disabled=false;generate.textContent='Générer mon CV Word ↓';},2500);});
 })();
 </script>
 <?php foot(); ?>
