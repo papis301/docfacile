@@ -4,7 +4,7 @@ if (FREE_MODE) foreach ($list as &$t0) $t0['is_premium'] = 0; unset($t0);
 head('Modèles de CV Word gratuits'); ?>
 <section class="hero text-center"><div class="container">
 <h1 class="h2 fw-bold">Créez votre CV en 5 minutes</h1>
-<p class="mb-0"><?= FREE_MODE ? count($list).' modèles Word gratuits, prêts à remplir.' : '15 modèles Word prêts à remplir. 5 gratuits, 10 premium à '.PRICE.'.' ?></p><a href="contact.php" class="btn btn-light btn-sm mt-3">💬 Demander un service</a> <a href="offres.php" class="btn btn-outline-light btn-sm mt-3">Offres d’emploi</a></div></section>
+<p class="mb-0"><?= FREE_MODE ? count($list).' modèles Word gratuits, prêts à remplir.' : '15 modèles Word prêts à remplir. 5 gratuits, 10 premium à '.PRICE.'.' ?></p><a href="contact.php" class="btn btn-light btn-sm mt-3">💬 Demander un service</a> <a href="offres.php" class="btn btn-outline-light btn-sm mt-3">Offres d’emploi</a><a href="creer-cv.php" class="btn btn-outline-light btn-sm mt-3">Creer votre Cv</a></div></section>
 <main class="container mt-4"><div class="row g-4"><div class="col-lg-9"><div class="row g-3">
 <?php foreach ($list as $t): ?>
 <div class="col-6 col-md-4"><div class="card h-100 shadow-sm">
